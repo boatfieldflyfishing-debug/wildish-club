@@ -1,28 +1,59 @@
 'use client';
+import { useState } from 'react';
 import { supabaseClient } from '@/lib/supabaseClient';
-import { Auth } from '@supabase/auth-ui-react';
-import { ThemeSupa } from '@supabase/auth-ui-shared';
 
 export default function AuthPage() {
   const supabase = supabaseClient();
-  // Send users back to the homepage after clicking the email link
-  const redirectTo =
-    (typeof window !== 'undefined' ? window.location.origin : '') || '';
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState<'idle'|'sending'|'sent'|'error'>('idle');
+  const [message, setMessage] = useState<string>('');
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setStatus('sending');
+    setMessage('');
+    try {
+      const redirectTo =
+        (typeof window !== 'undefined' ? window.location.origin : '') || '';
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: redirectTo } // returns to your site
+      });
+      if (error) throw error;
+      setStatus('sent');
+      setMessage('Magic link sent! Check your email.');
+    } catch (err: any) {
+      console.error(err);
+      setStatus('error');
+      setMessage(err?.message || 'Something went wrong.');
+    }
+  }
 
   return (
     <section className="grid gap-3 max-w-md">
       <div>
         <h1 className="text-2xl font-bold">Sign in</h1>
-        <p className="text-gray-600">Use your email to get a magic link.</p>
+        <p className="text-gray-600">We’ll email you a magic link.</p>
       </div>
-      <div className="card p-5">
-        <Auth
-          supabaseClient={supabase}
-          appearance={{ theme: ThemeSupa }}
-          providers={[]}
-          redirectTo={redirectTo || undefined}
+
+      <form onSubmit={onSubmit} className="card p-5 grid gap-3">
+        <input
+          type="email"
+          required
+          value={email}
+          onChange={(e)=>setEmail(e.target.value)}
+          placeholder="you@example.com"
+          className="rounded-xl border p-2"
         />
-      </div>
+        <button disabled={status==='sending'} className="btn btn-primary">
+          {status==='sending' ? 'Sending…' : 'Send magic link'}
+        </button>
+        {message && (
+          <div className={status==='error' ? 'text-red-600 text-sm' : 'text-gray-700 text-sm'}>
+            {message}
+          </div>
+        )}
+      </form>
     </section>
   );
 }
