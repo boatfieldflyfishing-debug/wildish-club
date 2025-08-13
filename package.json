@@ -21,7 +21,7 @@
     "mapbox-gl": "3.3.0",
     "qrcode": "1.5.3",
     "stripe": "14.23.0",
-    "@resend/node": "4.0.0"
+    "resend": "4.0.0"
   },
   "devDependencies": {
     "typescript": "5.4.5",
