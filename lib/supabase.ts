@@ -4,8 +4,8 @@ import { cookies } from 'next/headers';
 export function supabaseServer() {
   const cookieStore = cookies();
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,           // keep
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,      // <-- change to NEXT_PUBLIC_
     {
       cookies: {
         get(name: string) { return cookieStore.get(name)?.value; },
