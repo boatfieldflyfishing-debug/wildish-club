@@ -1,9 +1,8 @@
 'use client';
 import { useState } from 'react';
-import { supabaseClient } from '@/lib/supabaseClient';
+import { createClient } from '@supabase/supabase-js';
 
 export default function AuthPage() {
-  const supabase = supabaseClient();
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle'|'sending'|'sent'|'error'>('idle');
   const [message, setMessage] = useState<string>('');
@@ -12,14 +11,28 @@ export default function AuthPage() {
     e.preventDefault();
     setStatus('sending');
     setMessage('');
+
     try {
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+      const key = process.env.SUPABASE_ANON_KEY || '';
+
+      if (!url || !key) {
+        throw new Error(
+          'Missing Supabase env vars. Check Vercel Project Settings → Environment Variables: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_ANON_KEY.'
+        );
+      }
+
+      const supabase = createClient(url, key);
       const redirectTo =
         (typeof window !== 'undefined' ? window.location.origin : '') || '';
+
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: redirectTo } // returns to your site
+        options: { emailRedirectTo: redirectTo }
       });
+
       if (error) throw error;
+
       setStatus('sent');
       setMessage('Magic link sent! Check your email.');
     } catch (err: any) {
